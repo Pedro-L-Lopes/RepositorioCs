@@ -14,12 +14,12 @@ namespace ApiCatalogo.Controllers
     [Route("api/[Controller]")]
     [ApiController]
     public class ProdutosController : ControllerBase
-    {
-        /*private readonly AppDbContext _context;
+    { 
+        private readonly AppDbContext _context;
         public ProdutosController(AppDbContext contexto)
         {
             _context = contexto;
-        }*/
+        }
 
 
 
