@@ -1,9 +1,8 @@
-﻿using ApiCatalogo.Repository;
-using APICatalogo.Context;
+﻿using ApiCatalogo.DTOs;
+using ApiCatalogo.Repository;
 using APICatalogo.Models;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -14,26 +13,35 @@ namespace ApiCatalogo.Controllers
     public class CategoriasController : ControllerBase
     {
         private readonly IUnityOfWork _uof;
-        public CategoriasController(IUnityOfWork contexto)
+        private readonly IMapper _mapper;
+
+        public CategoriasController(IUnityOfWork contexto, IMapper mapper)
         {
             _uof = contexto;
+            _mapper = mapper;
         }
 
 
         [HttpGet("produtos")]
-        public ActionResult<IEnumerable<Categoria>> GetCategoriasProdutos()
+        public ActionResult<IEnumerable<CategoriaDTO>> GetCategoriasProdutos()
         {
-            return _uof.CategoriaRepository.GetCategoriasProdutos().ToList();
+            var categorias = _uof.CategoriaRepository.GetCategoriasProdutos().ToList();
+            var categoriasDTO = _mapper.Map<List<CategoriaDTO>>(categorias);
+
+            return categoriasDTO;
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<Categoria>> Get()
+        public ActionResult<IEnumerable<CategoriaDTO>> Get()
         {
-            return _uof.CategoriaRepository.Get().ToList();
+            var categorias = _uof.ProdutoRepository.Get().ToList();
+            var categoriasDTO = _mapper.Map<List<CategoriaDTO>>(categorias);
+
+            return categoriasDTO;
         }
 
         [HttpGet("{id}", Name = "ObterCategoria")]
-        public ActionResult<Categoria> Get(int id)
+        public ActionResult<CategoriaDTO> Get(int id)
         {
             var categoria = _uof.CategoriaRepository.GetById(p => p.CategoriaId == id);
 
@@ -41,35 +49,39 @@ namespace ApiCatalogo.Controllers
             {
                 return NotFound();
             }
-            return categoria;
+
+            var categoriaDTO = _mapper.Map<CategoriaDTO>(categoria);
+
+            return categoriaDTO;
         }
 
         [HttpPost]
         public ActionResult Post([FromBody] Categoria categoria)
         {
-            //if(!ModelState.IsValid)
-            //{
-            //    return BadRequest(ModelState);
-            //}
+            var categorias = _mapper.Map<Categoria>(categoria);
 
             _uof.CategoriaRepository.Add(categoria);
             _uof.Commit();
 
+            var categoriaDTO = _mapper.Map<ProdutoDTO>(categoria);
+
             return new CreatedAtRouteResult("ObterCategoria",
-                new { id = categoria.CategoriaId }, categoria);
+                new { id = categoria.CategoriaId }, categoriaDTO);
         }
 
         [HttpPut("{id}")]
-        public ActionResult Put(int id, [FromBody] Categoria categoria)
+        public ActionResult Put(int id, [FromBody] CategoriaDTO categoriaDto)
         {
             //if(!ModelState.IsValid)
             //{
             //    return BadRequest(ModelState);
             //}
-            if (id != categoria.CategoriaId)
+            if (id != categoriaDto.CategoriaId)
             {
                 return BadRequest();
             }
+
+            var categoria = _mapper.Map<Categoria>(categoriaDto);
 
             _uof.CategoriaRepository.Update(categoria);
             _uof.Commit();
@@ -77,7 +89,7 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpDelete("{id}")]
-        public ActionResult<Categoria> Delete(int id)
+        public ActionResult<CategoriaDTO> Delete(int id)
         {
             var categoria = _uof.CategoriaRepository.GetById(p => p.CategoriaId == id);
             //var categoria = _uof.Categorias.Find(id);
@@ -88,7 +100,10 @@ namespace ApiCatalogo.Controllers
             }
             _uof.CategoriaRepository.Delete(categoria);
             _uof.Commit();
-            return categoria;
+
+            var categoriaDTO = _mapper.Map<CategoriaDTO>(categoria);
+
+            return categoriaDTO;
         }
     }
 }
